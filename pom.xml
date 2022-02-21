@@ -44,11 +44,17 @@
         <connection>scm:git:https://github.com/LibrePDF/OpenPDF</connection>
         <developerConnection>scm:git:https://github.com/LibrePDF/OpenPDF</developerConnection>
     </scm>
-    <!-- Distribution config from http://central.sonatype.org/pages/apache-maven.html#distribution-management-and-authentication -->
+
     <distributionManagement>
+        <repository>
+            <id>tepez-release</id>
+            <name>AWS Release Repository</name>
+            <url>s3://tepez-maven-repository/release</url>
+        </repository>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <id>tepez-snapshot</id>
+            <name>AWS Snapshot Repository</name>
+            <url>s3://tepez-maven-repository/snapshot</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -182,6 +188,14 @@
     </dependencyManagement>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>org.springframework.build</groupId>
+                <artifactId>aws-maven</artifactId>
+                <version>5.0.0.RELEASE</version>
+            </extension>
+        </extensions>
+
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -321,17 +335,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>${nexus-staging-maven-plugin.version}</version>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
