@@ -27,5 +27,28 @@ jobs:
           role-to-assume: ${{ fromJSON(vars.AWS_ACCOUNT_ROLES).tepez }}
           aws-region: eu-west-1
 
-      - name: Build and deploy to S3 Maven repo
-        run: mvn -B clean deploy -Dgpg.skip
+      - name: Build and install locally
+        run: mvn -B clean install -Dgpg.skip
+
+      - name: Deploy artifacts to S3 Maven repo
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          GROUP_PATH="com/github/librepdf"
+          LOCAL_REPO="$HOME/.m2/repository/$GROUP_PATH"
+
+          if [[ "$VERSION" == *-SNAPSHOT ]]; then
+            S3_BASE="s3://tepez-maven-repository/snapshot/$GROUP_PATH"
+          else
+            S3_BASE="s3://tepez-maven-repository/release/$GROUP_PATH"
+          fi
+
+          # Upload each module's artifacts
+          for MODULE in openpdf-parent openpdf pdf-swing pdf-toolbox openpdf-fonts-extra; do
+            echo "Deploying $MODULE $VERSION"
+            aws s3 sync "$LOCAL_REPO/$MODULE/$VERSION/" "$S3_BASE/$MODULE/$VERSION/" --no-progress
+
+            # Also sync maven-metadata.xml files if they exist
+            if [ -f "$LOCAL_REPO/$MODULE/maven-metadata-local.xml" ]; then
+              aws s3 cp "$LOCAL_REPO/$MODULE/maven-metadata-local.xml" "$S3_BASE/$MODULE/maven-metadata.xml" --no-progress
+            fi
+          done
