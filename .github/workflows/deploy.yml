@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Disable IPv6 (runner IPv4-only)
+        working-directory: ${{ github.workspace }}
+        run: |
+          sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+          sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
